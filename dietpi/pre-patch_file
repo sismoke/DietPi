@@ -124,7 +124,7 @@ Package: wireguard wireguard-dkms wireguard-tools\nPin: release n=sid\nPin-Prior
 				echo -e '\e[90m[\e[0m INFO \e[90m]\e[0m Pre-patch 7 | Applying changes to APT sources.list since Debian dropped support for Jessie systems'
 				if [[ $(uname -m) == 'aarch64' ]]; then
 
-					echo 'deb http://archive.debian.org/debian/ main contrib non-free' > /etc/apt/sources.list || { EXIT_CODE=7; break; }
+					echo 'deb http://archive.debian.org/debian/ jessie main contrib non-free' > /etc/apt/sources.list || { EXIT_CODE=7; break; }
 
 				else
 
