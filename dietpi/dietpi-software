@@ -6843,10 +6843,10 @@ _EOF_
 			Banner_Installing
 
 			# Motion + depencencies
-			G_AGI motion v4l-utils curl libssl-dev libcurl4-openssl-dev libjpeg-dev zlib1g-dev
+			G_AGI motion v4l-utils curl gcc libssl-dev libcurl4-openssl-dev libjpeg-dev zlib1g-dev
 
 			# Motioneye
-			G_EXEC_OUTPUT=1 G_EXEC pip3 install -U 'git+https://github.com/ccrisan/motioneye@python3#egg=motioneye'
+			G_EXEC_OUTPUT=1 G_EXEC pip3 install -U 'https://github.com/ccrisan/motioneye/archive/python3.tar.gz#egg=motioneye'
 
 			# RPi: Enable camera module
 			(( $G_HW_MODEL > 9 )) || /boot/dietpi/func/dietpi-set_hardware rpi-camera enable
