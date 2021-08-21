@@ -1144,10 +1144,7 @@ INDEX_BROWSER_TARGET=$INDEX_BROWSER_TARGET"
 		aSOFTWARE_DESC[$software_id]='Web interface & surveillance for your camera'
 		aSOFTWARE_CATX[$software_id]=7
 		aSOFTWARE_DOCS[$software_id]='https://dietpi.com/docs/software/camera/#motioneye'
- 		aSOFTWARE_DEPS[$software_id]='7 16'
-		# Python 2 only, hence not supported on Bullseye
-		aSOFTWARE_AVAIL_G_DISTRO[$software_id,6]=0
-		aSOFTWARE_AVAIL_G_DISTRO[$software_id,7]=0
+ 		aSOFTWARE_DEPS[$software_id]='7 130'
 		#------------------
 		software_id=137
 
@@ -6845,12 +6842,26 @@ _EOF_
 
 			Banner_Installing
 
-			# Prereqs + Motion
-			G_AGI v4l-utils python-pip python-dev curl libssl-dev libcurl4-openssl-dev libjpeg-dev zlib1g-dev motion
+			# Motion + depencencies
+			G_AGI motion v4l-utils curl libssl-dev libcurl4-openssl-dev libjpeg-dev zlib1g-dev
 
 			# Motioneye
-			pip2 install -U pip setuptools wheel
-			pip2 install -U motioneye
+			G_EXEC_OUTPUT=1 G_EXEC pip3 install -U 'git+https://github.com/ccrisan/motioneye@python3#egg=motioneye'
+
+			# RPi: Enable camera module
+			(( $G_HW_MODEL > 9 )) || /boot/dietpi/func/dietpi-set_hardware rpi-camera enable
+
+			# Config
+			[[ -d '/etc/motioneye' ]] || G_EXEC mkdir /etc/motioneye
+			G_BACKUP_FP /etc/motioneye/motioneye.conf
+			G_EXEC cp /usr/local/share/motioneye/extra/motioneye.conf.sample /etc/motioneye/motioneye.conf
+
+			# Data
+			[[ -d '/mnt/dietpi_userdata/motioneye' ]] || G_EXEC mkdir /mnt/dietpi_userdata/motioneye
+			G_EXEC sed -i '/^media_path/c\media_path /mnt/dietpi_userdata/motioneye' /etc/motioneye/motioneye.conf
+
+			# Service
+			G_EXEC cp /usr/local/share/motioneye/extra/motioneye.systemd-unit-local /etc/systemd/system/motioneye.service
 
 		fi
 
@@ -12411,28 +12422,6 @@ WantedBy=multi-user.target
 _EOF_
 		fi
 
-		software_id=136 # MotionEye
-		if (( ${aSOFTWARE_INSTALL_STATE[$software_id]} == 1 )); then
-
-			Banner_Configuration
-
-			# Enable RPi cam
-			(( $G_HW_MODEL < 10 )) && /boot/dietpi/func/dietpi-set_hardware rpi-camera enable
-
-			# Config
-			G_EXEC mkdir -p /etc/motioneye
-			G_BACKUP_FP /etc/motioneye/motioneye.conf
-			G_EXEC cp /usr/local/share/motioneye/extra/motioneye.conf.sample /etc/motioneye/motioneye.conf
-
-			# Data
-			G_EXEC mkdir -p /mnt/dietpi_userdata/motioneye
-			G_EXEC sed -i '/^media_path/c\media_path /mnt/dietpi_userdata/motioneye' /etc/motioneye/motioneye.conf
-
-			# Service
-			G_EXEC cp /usr/local/share/motioneye/extra/motioneye.systemd-unit-local /etc/systemd/system/motioneye.service
-
-		fi
-
 		software_id=137 # mjpg-streamer
 		if (( ${aSOFTWARE_INSTALL_STATE[$software_id]} == 1 ))
 		then
@@ -14288,14 +14277,14 @@ _EOF_
 			Banner_Uninstalling
 			if [[ -f '/etc/systemd/system/motioneye.service' ]]; then
 
-				systemctl disable --now motioneye
-				rm -R /etc/systemd/system/motioneye.service*
+				G_EXEC systemctl disable --now motioneye
+				G_EXEC rm /etc/systemd/system/motioneye.service
 
 			fi
-			[[ -d '/etc/systemd/system/motioneye.service.d' ]] && rm -R /etc/systemd/system/motioneye.service.d
-			pip2 uninstall -y motioneye
+			[[ -d '/etc/systemd/system/motioneye.service.d' ]] && G_EXEC rm -R /etc/systemd/system/motioneye.service.d
+			G_EXEC_NOEXIT=1 G_EXEC pip uninstall -y motioneye
 			G_AGP motion
-			[[ -d '/etc/motioneye' ]] && rm -R /etc/motioneye
+			[[ -d '/etc/motioneye' ]] && G_EXEC rm -R /etc/motioneye
 
 		fi
 
